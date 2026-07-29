@@ -1,0 +1,50 @@
+<div class="card status-override-card">
+  <div class="card-header">
+    <h3 class="card-title">Status Override</h3>
+    <span class="card-subtitle">Set active presence status</span>
+  </div>
+
+  <% 
+    const botClient = (typeof discordClient !== 'undefined' && discordClient) ? discordClient : (typeof client !== 'undefined' ? client : null);
+    let currentStatus = (botClient && botClient.user && botClient.user.presence) ? botClient.user.presence.status : 'offline';
+    if (currentStatus === 'offline') currentStatus = 'invisible';
+  %>
+
+  <div class="status-options-list">
+    <form action="/changestatus" method="POST" class="status-option-form">
+      <input type="hidden" name="status" value="online">
+      <button type="submit" class="status-option-row <%= currentStatus === 'online' ? 'active' : '' %>">
+        <span class="status-dot status-online"></span>
+        <span class="status-label">Online</span>
+        <% if (currentStatus === 'online') { %><span class="active-indicator">✓</span><% } %>
+      </button>
+    </form>
+
+    <form action="/changestatus" method="POST" class="status-option-form">
+      <input type="hidden" name="status" value="idle">
+      <button type="submit" class="status-option-row <%= currentStatus === 'idle' ? 'active' : '' %>">
+        <span class="status-dot status-idle"></span>
+        <span class="status-label">Idle</span>
+        <% if (currentStatus === 'idle') { %><span class="active-indicator">✓</span><% } %>
+      </button>
+    </form>
+
+    <form action="/changestatus" method="POST" class="status-option-form">
+      <input type="hidden" name="status" value="dnd">
+      <button type="submit" class="status-option-row <%= currentStatus === 'dnd' ? 'active' : '' %>">
+        <span class="status-dot status-dnd"></span>
+        <span class="status-label">Do Not Disturb</span>
+        <% if (currentStatus === 'dnd') { %><span class="active-indicator">✓</span><% } %>
+      </button>
+    </form>
+
+    <form action="/changestatus" method="POST" class="status-option-form">
+      <input type="hidden" name="status" value="invisible">
+      <button type="submit" class="status-option-row <%= currentStatus === 'invisible' ? 'active' : '' %>">
+        <span class="status-dot status-invisible"></span>
+        <span class="status-label">Invisible</span>
+        <% if (currentStatus === 'invisible') { %><span class="active-indicator">✓</span><% } %>
+      </button>
+    </form>
+  </div>
+</div>

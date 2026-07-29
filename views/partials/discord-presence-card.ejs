@@ -1,0 +1,124 @@
+<section id="presence" class="card">
+  <div class="card-header">
+    <div>
+      <span class="section-label">Discord Live Profile</span>
+      <h2 class="card-title">User Popout & Presence</h2>
+    </div>
+    <span class="status-badge status-live">
+      <span class="status-indicator-dot dot-pulse"></span>
+      Live Sync
+    </span>
+  </div>
+
+  <% if (client.user) { const avatarUrl=typeof client.user.displayAvatarURL==='function' ?
+    client.user.displayAvatarURL({ dynamic: true, size: 128 }) : null; const username=client.user.username || 'Unknown'
+    ; const displayName=client.user.globalName || client.user.displayName || username; const
+    clanTag=client.user.clan?.tag || null; const status=client.user.presence?.status || 'offline' ; const
+    activities=client.user.presence && Array.isArray(client.user.presence.activities) ?
+    client.user.presence.activities.filter(Boolean) : []; const customActivity=activities.find(a=> a.type === 'CUSTOM'
+    || a.type === 4);
+    const customStatus = customActivity ? customActivity.state || null : null;
+    const richActivity = activities.find(a => a.type !== 'CUSTOM' && a.type !== 4);
+    %>
+    <!-- Discord User Popout Card -->
+    <div class="discord-popout-card mt-4">
+      <div class="popout-banner"></div>
+      <div class="popout-body">
+        <div class="popout-avatar-wrapper">
+          <div class="popout-avatar">
+            <img id="profile-avatar-img" src="<%= avatarUrl || '' %>" alt="<%= username %> avatar"
+              class="<%= avatarUrl ? '' : 'hidden' %>">
+            <div id="profile-avatar-fallback" class="avatar-fallback <%= avatarUrl ? 'hidden' : '' %>">
+              <%= (username || '?' ).slice(0, 1).toUpperCase() %>
+            </div>
+          </div>
+          <!-- Colored presence dot matching Discord colors -->
+          <span id="profile-status-dot" class="popout-status-dot status-<%= status %>"
+            title="Status: <%= status %>"></span>
+        </div>
+
+        <div class="popout-identity">
+          <div class="popout-names">
+            <h3 id="profile-display-name" class="popout-display-name">
+              <%= displayName %>
+            </h3>
+            <span id="profile-username" class="popout-username">@<%= username %></span>
+            <!-- Clan tag badge replaces BOT badge -->
+            <span id="profile-clan-badge" class="clan-tag-badge <%= clanTag ? '' : 'hidden' %>">
+              <%= clanTag || '' %>
+            </span>
+          </div>
+
+          <!-- Custom status text -->
+          <div id="profile-custom-status-container" class="popout-custom-status <%= customStatus ? '' : 'hidden' %>">
+            <span id="profile-custom-status">
+              <%= customStatus || '' %>
+            </span>
+          </div>
+        </div>
+
+        <!-- Activity / Rich Presence Section -->
+        <div class="popout-activity-section">
+          <span class="activity-section-label">Current Activity</span>
+          <div id="profile-activity-box" class="activity-box">
+            <% if (richActivity) { %>
+              <div class="activity-header font-medium">
+                <%= richActivity.name || 'Activity' %>
+              </div>
+              <% if (richActivity.details) { %>
+                <div class="activity-details">
+                  <%= richActivity.details %>
+                </div>
+                <% } %>
+                  <% if (richActivity.state) { %>
+                    <div class="activity-state">
+                      <%= richActivity.state %>
+                    </div>
+                    <% } %>
+                      <% } else { %>
+                        <div class="activity-none">No activity currently detected</div>
+                        <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Change Radio Form -->
+    <form action="/changestatus" method="post" class="presence-change-form mt-4">
+      <span class="form-label mb-2">Switch Presence Status</span>
+      <div class="status-radio-grid">
+        <label class="status-radio-card">
+          <input type="radio" id="status-online" name="status" value="online" <%=status==='online' ? 'checked' : '' %>>
+          <span class="radio-indicator status-dot-online"></span>
+          <span class="radio-text">Online</span>
+        </label>
+
+        <label class="status-radio-card">
+          <input type="radio" id="status-idle" name="status" value="idle" <%=status==='idle' ? 'checked' : '' %>>
+          <span class="radio-indicator status-dot-idle"></span>
+          <span class="radio-text">Idle</span>
+        </label>
+
+        <label class="status-radio-card">
+          <input type="radio" id="status-dnd" name="status" value="dnd" <%=status==='dnd' ? 'checked' : '' %>>
+          <span class="radio-indicator status-dot-dnd"></span>
+          <span class="radio-text">Do Not Disturb</span>
+        </label>
+
+        <label class="status-radio-card">
+          <input type="radio" id="status-offline" name="status" value="offline" <%=(status==='invisible' ||
+            status==='offline' ) ? 'checked' : '' %>>
+          <span class="radio-indicator status-dot-offline"></span>
+          <span class="radio-text">Invisible / Offline</span>
+        </label>
+      </div>
+      <div class="card-actions mt-3">
+        <button type="submit" class="btn btn-primary">Update Presence</button>
+      </div>
+    </form>
+    <% } else { %>
+      <div class="info-box mt-4">
+        <p class="info-value">Discord client is not ready yet. Please wait for login.</p>
+      </div>
+      <% } %>
+</section>

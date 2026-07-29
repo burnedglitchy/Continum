@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Continum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #F5F0E8;
+      --bg-surface: #FFFFFF;
+      --border-color: #E0D9CE;
+      --accent-color: #C1440E;
+      --accent-hover: #A5390B;
+      --text-primary: #1A1A1A;
+      --text-muted: #888888;
+      --status-online: #22C55E;
+      --status-idle: #F59E0B;
+      --status-dnd: #EF4444;
+      --status-invisible: #6B7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar styles */
+    .app-sidebar {
+      width: 280px;
+      background-color: var(--bg-surface);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      gap: 2rem;
+      flex-shrink: 0;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .instances-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .instance-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-surface);
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+
+    .instance-card.active {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 1px var(--accent-color);
+    }
+
+    .instance-avatar-wrapper {
+      position: relative;
+      width: 36px;
+      height: 36px;
+    }
+
+    .instance-avatar, .instance-avatar-placeholder {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .instance-avatar-placeholder {
+      background: #E8E2D8;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .status-indicator-dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-surface);
+    }
+    .status-online { background-color: var(--status-online); }
+    .status-idle { background-color: var(--status-idle); }
+    .status-dnd { background-color: var(--status-dnd); }
+    .status-invisible, .status-offline { background-color: var(--status-invisible); }
+
+    .instance-info { flex: 1; overflow: hidden; }
+    .instance-name { font-weight: 600; font-size: 0.85rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .instance-tag { font-size: 0.75rem; color: var(--text-muted); }
+
+    .active-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-transform: uppercase;
+    }
+
+    .add-instance-card {
+      border: 1.5px dashed var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: border-color 0.15s ease;
+    }
+    .add-instance-card:hover { border-color: var(--accent-color); color: var(--accent-color); }
+    .add-icon { width: 36px; height: 36px; border-radius: 50%; background: #F5F0E8; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; }
+    .add-label { font-size: 0.85rem; font-weight: 500; }
+
+    .add-instance-form { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 0.35rem; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: background 0.15s ease;
+    }
+    .nav-item:hover, .nav-item.active { background: #F5F0E8; color: var(--accent-color); }
+    .nav-icon { width: 18px; height: 18px; }
+
+    .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+    .footer-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-decoration: none; }
+    .footer-link:hover { color: var(--text-primary); }
+
+    /* Main Content */
+    .app-main {
+      flex: 1;
+      padding: 2.5rem 3rem;
+      max-width: 900px;
+    }
+
+    .main-header {
+      margin-bottom: 2rem;
+    }
+    .main-title { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); }
+    .main-description { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* Cards */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .card-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+    .card-subtitle { font-size: 0.825rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+    .danger-card {
+      background: #FDF4F2;
+      border-color: #F87171;
+    }
+    .danger-card .card-title { color: #991B1B; }
+
+    /* Forms */
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+    .form-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--text-muted); text-transform: uppercase; }
+    .form-input {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--accent-color); }
+
+    .token-input-wrapper { position: relative; display: flex; align-items: center; }
+    .token-input-wrapper .form-input { padding-right: 2.5rem; }
+    .eye-toggle-btn {
+      position: absolute;
+      right: 0.65rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      padding: 0.25rem;
+    }
+
+    .form-row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-actions-right { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; }
+    .form-actions-between { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-accent { background: var(--accent-color); color: #FFFFFF; }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-outline { background: transparent; border-color: var(--border-color); color: var(--text-primary); }
+    .btn-outline:hover { border-color: var(--accent-color); color: var(--accent-color); }
+    .btn-ghost { background: transparent; color: var(--text-primary); }
+    .btn-ghost:hover { background: #F5F0E8; }
+    .btn-danger { background: #DC2626; color: #FFFFFF; }
+    .btn-danger:hover { background: #B91C1C; }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .full-width { width: 100%; }
+
+    /* Toggle Pill */
+    .toggle-pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: var(--bg-base);
+    }
+    .toggle-pill-btn.active { background: #DCFCE7; border-color: #86EFAC; color: #166534; }
+    .toggle-pill-btn.inactive { background: #F3F4F6; border-color: #E5E7EB; color: #4B5563; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <%- include('partials/new-sidebar', { activeNav: 'settings' }) %>
+
+    <main class="app-main">
+      <div class="main-header">
+        <h1 class="main-title">Settings</h1>
+        <p class="main-description">Configure token, timed spam, and state settings for the active instance.</p>
+      </div>
+
+      <!-- ACCOUNT TOKEN SECTION -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">ACCOUNT TOKEN</h3>
+            <p class="card-subtitle">Discord selfbot token for Instance <%= activeInstanceId %></p>
+          </div>
+        </div>
+
+        <form action="/settings/token" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="tokenInput">DISCORD USER TOKEN</label>
+            <div class="token-input-wrapper">
+              <input type="password" id="tokenInput" name="token" class="form-input" value="<%= token %>" placeholder="Enter Discord Token" required>
+              <button type="button" class="eye-toggle-btn" onclick="toggleTokenVisibility()" title="Toggle Token Visibility">
+                <svg id="eyeIcon" class="icon-sm" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-actions-right">
+            <button type="submit" class="btn btn-accent">Save Token</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SPAM SETTINGS SECTION -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">SPAM SETTINGS</h3>
+            <p class="card-subtitle">Automated text activity interval configuration</p>
+          </div>
+          <form action="/settings/spam-toggle" method="POST" style="display:inline;">
+            <button type="submit" class="toggle-pill-btn <%= spamConfig.spamEnabled ? 'active' : 'inactive' %>">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:currentColor;"></span>
+              <%= spamConfig.spamEnabled ? 'Spam Active' : 'Spam Disabled' %>
+            </button>
+          </form>
+        </div>
+
+        <form action="/settings/spam" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="spamChannelId">TARGET CHANNEL ID</label>
+            <input type="text" id="spamChannelId" name="spamChannelId" class="form-input" value="<%= spamConfig.spamChannelId %>" placeholder="e.g. 1426901944097570846">
+          </div>
+
+          <div class="form-row-pair">
+            <div class="form-group">
+              <label class="form-label" for="spamMin">MIN INTERVAL (SECONDS)</label>
+              <input type="number" id="spamMin" name="spamMin" class="form-input" value="<%= spamConfig.spamMin %>" min="10" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="spamMax">MAX INTERVAL (SECONDS)</label>
+              <input type="number" id="spamMax" name="spamMax" class="form-input" value="<%= spamConfig.spamMax %>" min="10" required>
+            </div>
+          </div>
+
+          <div class="form-actions-right">
+            <button type="submit" class="btn btn-accent">Save Spam Config</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- DANGER ZONE SECTION -->
+      <div class="card danger-card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">DANGER ZONE</h3>
+            <p class="card-subtitle">Clear configuration and disconnect active voice session for Instance <%= activeInstanceId %></p>
+          </div>
+        </div>
+        <div class="form-actions-between">
+          <span style="font-size:0.85rem; color:#7F1D1D;">Reset token, spam settings, and state for this instance.</span>
+          <form action="/settings/reset" method="POST" onsubmit="return confirm('Are you sure you want to reset all config for this instance?');">
+            <button type="submit" class="btn btn-danger">Reset All Config</button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function toggleTokenVisibility() {
+      const input = document.getElementById('tokenInput');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+      } else {
+        input.type = 'password';
+      }
+    }
+  </script>
+</body>
+</html>

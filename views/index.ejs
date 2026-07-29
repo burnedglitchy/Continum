@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Continum — Selfbot Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #F5F0E8;
+      --bg-surface: #FFFFFF;
+      --border-color: #E0D9CE;
+      --accent-color: #C1440E;
+      --accent-hover: #A5390B;
+      --text-primary: #1A1A1A;
+      --text-muted: #888888;
+      --status-online: #22C55E;
+      --status-idle: #F59E0B;
+      --status-dnd: #EF4444;
+      --status-invisible: #6B7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar styles */
+    .app-sidebar {
+      width: 280px;
+      background-color: var(--bg-surface);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      gap: 2rem;
+      flex-shrink: 0;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .instances-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .instance-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-surface);
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+
+    .instance-card.active {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 1px var(--accent-color);
+    }
+
+    .instance-avatar-wrapper {
+      position: relative;
+      width: 36px;
+      height: 36px;
+    }
+
+    .instance-avatar, .instance-avatar-placeholder {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .instance-avatar-placeholder {
+      background: #E8E2D8;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .status-indicator-dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-surface);
+    }
+    .status-online { background-color: var(--status-online); }
+    .status-idle { background-color: var(--status-idle); }
+    .status-dnd { background-color: var(--status-dnd); }
+    .status-invisible, .status-offline { background-color: var(--status-invisible); }
+
+    .instance-info { flex: 1; overflow: hidden; }
+    .instance-name { font-weight: 600; font-size: 0.85rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .instance-tag { font-size: 0.75rem; color: var(--text-muted); }
+
+    .active-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-transform: uppercase;
+    }
+
+    .add-instance-card {
+      border: 1.5px dashed var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: border-color 0.15s ease;
+    }
+    .add-instance-card:hover { border-color: var(--accent-color); color: var(--accent-color); }
+    .add-icon { width: 36px; height: 36px; border-radius: 50%; background: #F5F0E8; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; }
+    .add-label { font-size: 0.85rem; font-weight: 500; }
+
+    .add-instance-form { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 0.35rem; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: background 0.15s ease;
+    }
+    .nav-item:hover, .nav-item.active { background: #F5F0E8; color: var(--accent-color); }
+    .nav-icon { width: 18px; height: 18px; }
+
+    .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+    .footer-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-decoration: none; }
+    .footer-link:hover { color: var(--text-primary); }
+
+    /* Main Content */
+    .app-main {
+      flex: 1;
+      padding: 2.5rem 3rem;
+      max-width: 1200px;
+    }
+
+    .main-header {
+      margin-bottom: 2rem;
+    }
+    .main-title { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); }
+    .main-description { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 1.75rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .grid-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Card Component Base */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+    .card-subtitle { font-size: 0.825rem; color: var(--text-muted); }
+    .card-subtitle-accent { font-size: 0.825rem; color: var(--accent-color); margin-top: 0.15rem; font-weight: 500; }
+
+    /* User Profile Card */
+    .user-profile-header { display: flex; align-items: center; gap: 1rem; }
+    .user-avatar-container { position: relative; width: 56px; height: 56px; }
+    .user-avatar-img, .user-avatar-placeholder { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+    .user-avatar-placeholder { background: #E8E2D8; color: var(--text-primary); font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .presence-badge { position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--bg-surface); }
+
+    .user-details { display: flex; flex-direction: column; }
+    .user-display-name { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+    .user-tag { font-size: 0.85rem; color: var(--text-muted); }
+
+    .spotify-activity-block {
+      margin-top: 1.25rem;
+      padding: 0.85rem;
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: 10px;
+    }
+    .spotify-badge { font-size: 0.65rem; font-weight: 700; color: #15803D; letter-spacing: 0.08em; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem; }
+    .spotify-icon { width: 14px; height: 14px; }
+    .spotify-track-name { font-size: 0.875rem; font-weight: 600; color: #166534; }
+    .spotify-artist-name { font-size: 0.775rem; color: #15803D; }
+
+    /* Status Override Card */
+    .status-options-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .status-option-form { width: 100%; }
+    .status-option-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-surface);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .status-option-row:hover { background: #F5F0E8; }
+    .status-option-row.active {
+      background: #FDF4F0;
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .active-indicator { margin-left: auto; font-weight: 700; }
+
+    /* Voice Connection & Session Card */
+    .status-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+    }
+    .status-pill-disconnected { background: #F3F4F6; color: #6B7280; border: 1px solid #E5E7EB; }
+    
+    .hardware-isolation-bar { margin: 1rem 0; }
+    .hardware-buttons-inline { display: flex; align-items: center; gap: 0.6rem; }
+    .btn-hardware {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-hardware-filled { background: var(--accent-color); color: #FFFFFF; }
+    .btn-hardware-outline { border: 1.5px solid var(--border-color); color: var(--text-primary); }
+    .hardware-text { font-size: 0.8rem; color: var(--text-muted); }
+    .icon-sm { width: 16px; height: 16px; }
+    
+    .card-divider { border: 0; border-top: 1px solid var(--border-color); margin: 1.25rem 0; }
+
+    .voice-join-form { display: flex; flex-direction: column; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--text-muted); text-transform: uppercase; }
+    .form-input {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--accent-color); }
+    .form-row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-actions-right { display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+    /* Voice Session Live Card */
+    .voice-session-card {
+      border-left: 4px solid var(--status-online);
+    }
+    .session-top-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+    .server-info { display: flex; align-items: center; gap: 0.85rem; }
+    .server-icon-img, .server-icon-placeholder { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
+    .server-icon-placeholder { background: #E8E2D8; color: var(--text-primary); font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .server-title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
+    .channel-subtitle { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; margin-top: 0.15rem; }
+    .vc-icon { width: 15px; height: 15px; }
+
+    .live-pill { font-size: 0.75rem; font-weight: 700; color: var(--status-online); background: #DCFCE7; padding: 0.25rem 0.65rem; border-radius: 9999px; border: 1px solid #86EFAC; }
+
+    .voice-controls-bar { display: flex; gap: 0.75rem; margin: 1.25rem 0; }
+    .btn-audio {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+    }
+    .btn-audio.active { background: var(--accent-color); color: #FFFFFF; border-color: var(--accent-color); }
+    .audio-icon { width: 16px; height: 16px; }
+
+    .session-bottom-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; pt: 1rem; border-top: 1px solid var(--border-color); }
+
+    /* General Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-accent { background: var(--accent-color); color: #FFFFFF; }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-outline { background: transparent; border-color: var(--border-color); color: var(--text-primary); }
+    .btn-outline:hover { border-color: var(--accent-color); color: var(--accent-color); }
+    .btn-ghost { background: transparent; color: var(--text-primary); }
+    .btn-ghost:hover { background: #F5F0E8; }
+    .btn-danger-outline { background: transparent; border: 1px solid #F87171; color: #DC2626; }
+    .btn-danger-outline:hover { background: #FEE2E2; }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .full-width { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <%- include('partials/new-sidebar', { activeNav: 'dashboard' }) %>
+
+    <main class="app-main">
+      <div class="main-header">
+        <h1 class="main-title">Dashboard</h1>
+        <p class="main-description">Managing active selfbot instance (<%= activeInstanceId %>).</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="grid-col">
+          <%- include('partials/user-card') %>
+          <%- include('partials/status-override') %>
+        </div>
+
+        <div class="grid-col">
+          <%- include('partials/voice-connection') %>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

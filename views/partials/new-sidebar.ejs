@@ -1,0 +1,107 @@
+<aside class="app-sidebar">
+  <div class="sidebar-section">
+    <div class="section-label">INSTANCES</div>
+    <div class="instances-list">
+      <% instances.forEach(function(inst) { %>
+        <form action="/instance/switch" method="POST" class="instance-form">
+          <input type="hidden" name="id" value="<%= inst.id %>">
+          <button type="submit" class="instance-card <%= inst.id === activeInstanceId ? 'active' : '' %>">
+            <div class="instance-avatar-wrapper">
+              <% if (inst.avatarURL) { %>
+                <img src="<%= inst.avatarURL %>" alt="<%= inst.username %>" class="instance-avatar">
+              <% } else { %>
+                <div class="instance-avatar-placeholder">
+                  <%= inst.username.charAt(0).toUpperCase() %>
+                </div>
+              <% } %>
+              <span class="status-indicator-dot status-<%= inst.status %>"></span>
+            </div>
+            <div class="instance-info">
+              <div class="instance-name"><%= inst.username %></div>
+              <div class="instance-tag">#<%= inst.discriminator %></div>
+            </div>
+            <% if (inst.id === activeInstanceId) { %>
+              <div class="active-badge">Active</div>
+            <% } %>
+          </button>
+        </form>
+      <% }); %>
+
+      <% if (instances.length < 2) { %>
+        <div class="add-instance-card" id="addInstanceSlot" onclick="toggleAddInstanceForm()">
+          <div class="add-icon">+</div>
+          <div class="add-label">Add account</div>
+        </div>
+
+        <form action="/instance/add" method="POST" class="add-instance-form" id="addInstanceForm" style="display: none;">
+          <input type="password" name="token" placeholder="Enter Discord Token" class="form-input token-input-sm" required>
+          <div class="add-form-actions">
+            <button type="submit" class="btn btn-accent btn-sm">Add</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAddInstanceForm()">Cancel</button>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="section-label">NAVIGATION</div>
+    <a href="/" class="nav-item <%= (typeof activeNav !== 'undefined' && activeNav === 'dashboard') ? 'active' : '' %>">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+      </svg>
+      Dashboard
+    </a>
+    <a href="/settings" class="nav-item <%= (typeof activeNav !== 'undefined' && activeNav === 'settings') ? 'active' : '' %>">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      Settings
+    </a>
+    <a href="#" class="nav-item" onclick="alert('Logs view - active session operational'); return false;">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      Logs
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <% if (instances.length < 2) { %>
+      <button type="button" class="btn btn-outline full-width" onclick="toggleAddInstanceForm()">
+        + New Instance
+      </button>
+    <% } %>
+    <a href="https://discord.gg" target="_blank" rel="noopener" class="footer-link">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      Support
+    </a>
+  </div>
+</aside>
+
+<script>
+function toggleAddInstanceForm() {
+  const slot = document.getElementById('addInstanceSlot');
+  const form = document.getElementById('addInstanceForm');
+  if (!form) return;
+  if (form.style.display === 'none' || form.style.display === '') {
+    form.style.display = 'flex';
+    if (slot) slot.style.display = 'none';
+  } else {
+    form.style.display = 'none';
+    if (slot) slot.style.display = 'flex';
+  }
+}
+</script>

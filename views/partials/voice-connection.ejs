@@ -1,0 +1,50 @@
+<% if (typeof isConnected !== 'undefined' && isConnected) { %>
+  <%- include('voice-session') %>
+<% } else { %>
+  <div class="card voice-connection-card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">Voice Connection</h3>
+        <p class="card-subtitle-accent">Force instance to join specific voice channels.</p>
+      </div>
+      <span class="status-pill status-pill-disconnected">Disconnected</span>
+    </div>
+
+    <div class="hardware-isolation-bar">
+      <div class="hardware-buttons-inline">
+        <span class="btn-hardware btn-hardware-filled" title="Mic enabled">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          </svg>
+        </span>
+        <span class="btn-hardware btn-hardware-outline" title="Headphone enabled">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+          </svg>
+        </span>
+        <span class="hardware-text">Hardware states isolated.</span>
+      </div>
+    </div>
+
+    <hr class="card-divider">
+
+    <form action="/join" method="POST" class="voice-join-form">
+      <div class="form-row-pair">
+        <div class="form-group">
+          <label class="form-label" for="guildId">GUILD ID</label>
+          <input type="text" id="guildId" name="guildId" class="form-input" placeholder="e.g. 123456789012345678" value="<%= (history && history.guildId) ? history.guildId : '' %>" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="channelId">CHANNEL ID</label>
+          <input type="text" id="channelId" name="channelId" class="form-input" placeholder="e.g. 987654321098765432" value="<%= (history && history.channelId) ? history.channelId : '' %>" required>
+        </div>
+      </div>
+
+      <div class="form-actions-right">
+        <button type="submit" class="btn btn-accent">Connect</button>
+      </div>
+    </form>
+  </div>
+<% } %>

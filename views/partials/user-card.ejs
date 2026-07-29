@@ -1,0 +1,51 @@
+<div class="card user-profile-card">
+  <div class="user-profile-header">
+    <div class="user-avatar-container">
+      <% 
+        const botClient = (typeof discordClient !== 'undefined' && discordClient) ? discordClient : (typeof client !== 'undefined' ? client : null);
+        let avatarSrc = null;
+        if (botClient && botClient.user && typeof botClient.user.displayAvatarURL === 'function') {
+          avatarSrc = botClient.user.displayAvatarURL({ dynamic: true, size: 128 });
+        }
+        let status = (botClient && botClient.user && botClient.user.presence) ? botClient.user.presence.status : 'offline';
+        let username = (botClient && botClient.user) ? (botClient.user.globalName || botClient.user.username) : 'Offline Client';
+        let tag = (botClient && botClient.user) ? `@${botClient.user.username}` : '#0000';
+      %>
+      <% if (avatarSrc) { %>
+        <img src="<%= avatarSrc %>" alt="<%= username %>" class="user-avatar-img">
+      <% } else { %>
+        <div class="user-avatar-placeholder">
+          <%= username.charAt(0).toUpperCase() %>
+        </div>
+      <% } %>
+      <span class="presence-badge status-<%= status %>" title="Status: <%= status %>"></span>
+    </div>
+
+    <div class="user-details">
+      <h2 class="user-display-name"><%= username %></h2>
+      <div class="user-tag"><%= tag %></div>
+    </div>
+  </div>
+
+  <% 
+    let spotifyActivity = null;
+    if (botClient && botClient.user && botClient.user.presence && Array.isArray(botClient.user.presence.activities)) {
+      spotifyActivity = botClient.user.presence.activities.find(a => 
+        a && (a.name === 'Spotify' || a.type === 'LISTENING' || a.type === 2)
+      );
+    }
+  %>
+
+  <% if (spotifyActivity) { %>
+    <div class="spotify-activity-block">
+      <div class="spotify-badge">
+        <svg class="spotify-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.48-1.02.72-1.56.42z"/>
+        </svg>
+        LISTENING TO SPOTIFY
+      </div>
+      <div class="spotify-track-name"><%= spotifyActivity.details || 'Unknown Track' %></div>
+      <div class="spotify-artist-name">by <%= spotifyActivity.state || 'Unknown Artist' %></div>
+    </div>
+  <% } %>
+</div>
