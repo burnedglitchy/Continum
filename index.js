@@ -189,11 +189,19 @@ function getActiveInstance() {
     return inst;
 }
 
-function joinVC(client, guildId, channelId, mute, deaf, instanceId) {
+async function joinVC(client, guildId, channelId, mute, deaf, instanceId) {
     const guild = client.guilds.cache.get(guildId);
     if (!guild) throw new Error(`Guild ${guildId} not found in client cache.`);
-    const voiceChannel = guild.channels.cache.get(channelId);
-    if (!voiceChannel) throw new Error(`Channel ${channelId} not found in guild cache.`);
+
+    let voiceChannel = guild.channels.cache.get(channelId);
+    if (!voiceChannel) {
+        try {
+            voiceChannel = await client.channels.fetch(channelId);
+        } catch (e) {
+            throw new Error(`Channel ${channelId} not found: ${e.message}`);
+        }
+    }
+    if (!voiceChannel) throw new Error(`Channel ${channelId} not found.`);
 
     const connection = joinVoiceChannel({
         channelId: voiceChannel.id,
@@ -281,7 +289,7 @@ app.get("/", (req, res) => {
 });
 
 // POST Join Voice Channel
-app.post("/join", (req, res) => {
+app.post("/join", async (req, res) => {
     const active = getActiveInstance();
     if (!active || !active.client) return res.redirect('/');
 
@@ -292,7 +300,7 @@ app.post("/join", (req, res) => {
     try {
         active.state.muted = _mute;
         active.state.deafened = _deaf;
-        const connection = joinVC(active.client, guildId, channelId, _mute, _deaf, active.id);
+        const connection = await joinVC(active.client, guildId, channelId, _mute, _deaf, active.id);
         active.state.connection = connection;
         active.state.history.guildId = guildId;
         active.state.history.channelId = channelId;
