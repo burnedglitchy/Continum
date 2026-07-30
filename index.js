@@ -1,5 +1,5 @@
 const { PresenceUpdateStatus } = require('discord.js');
-const { Client } = require('discord.js-selfbot-v13');
+const { Client, Options } = require('discord.js-selfbot-v13');
 const { joinVoiceChannel } = require("@discordjs/voice");
 const express = require('express');
 const path = require('path');
@@ -101,7 +101,17 @@ function createInstance(configData) {
         spamMax: Number(configData.spamMax) || 120,
         spamEnabled: Boolean(configData.spamEnabled),
         spamTimeout: null,
-        client: new Client({ checkUpdate: false }),
+        client: new Client({
+            checkUpdate: false,
+            sweepInterval: 60000,
+            makeCache: Options.cacheWithLimits({
+                GuildMemberManager: 0,
+                MessageManager: 0,
+                PresenceManager: 0,
+                UserManager: 50,
+                GuildChannelManager: 200
+            })
+        }),
         state: {
             isConnected: false,
             connection: null,
@@ -124,8 +134,8 @@ function createInstance(configData) {
         }
     });
 
-    inst.client.on('presenceUpdate', () => { });
-    inst.client.on('userUpdate', () => { });
+    inst.client.on('presenceUpdate', () => { return; });
+    inst.client.on('userUpdate', () => { return; });
 
     if (inst.token) {
         inst.client.login(inst.token).catch(err => {
