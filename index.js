@@ -34,6 +34,7 @@ const configPath = path.join(__dirname, 'config.json');
  *   }
  * }
  */
+
 const instances = new Map();
 let activeInstanceId = "1";
 
