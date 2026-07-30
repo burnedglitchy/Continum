@@ -123,8 +123,8 @@ function createInstance(configData) {
         }
     });
 
-    inst.client.on('presenceUpdate', () => {});
-    inst.client.on('userUpdate', () => {});
+    inst.client.on('presenceUpdate', () => { });
+    inst.client.on('userUpdate', () => { });
 
     if (inst.token) {
         inst.client.login(inst.token).catch(err => {
@@ -178,7 +178,7 @@ function getActiveInstance() {
     return inst;
 }
 
-function joinVC(client, guildId, channelId, mute, deaf) {
+function joinVC(client, guildId, channelId, mute, deaf, instanceId) {
     const guild = client.guilds.cache.get(guildId);
     if (!guild) throw new Error(`Guild ${guildId} not found in client cache.`);
     const voiceChannel = guild.channels.cache.get(channelId);
@@ -189,7 +189,8 @@ function joinVC(client, guildId, channelId, mute, deaf) {
         guildId: guild.id,
         adapterCreator: guild.voiceAdapterCreator,
         selfDeaf: deaf,
-        selfMute: mute
+        selfMute: mute,
+        group: String(instanceId)
     });
     return connection;
 }
@@ -276,10 +277,22 @@ app.post("/join", (req, res) => {
     try {
         active.state.muted = _mute;
         active.state.deafened = _deaf;
-        active.state.connection = joinVC(active.client, guildId, channelId, _mute, _deaf);
+        const connection = joinVC(active.client, guildId, channelId, _mute, _deaf, active.id);
+        active.state.connection = connection;
         active.state.history.guildId = guildId;
         active.state.history.channelId = channelId;
         active.state.isConnected = true;
+
+        const instRef = active;
+        const handleDisconnect = () => {
+            instRef.state.isConnected = false;
+            instRef.state.connection = null;
+        };
+        connection.on('stateChange', (oldState, newState) => {
+            if (newState.status === 'destroyed' || newState.status === 'disconnected') {
+                handleDisconnect();
+            }
+        });
 
         // State enrichment for Voice Session card
         const guild = active.client.guilds.cache.get(guildId);
@@ -494,7 +507,7 @@ app.post("/settings/reset", (req, res) => {
         if (active.state.connection) {
             try {
                 active.state.connection.destroy();
-            } catch (e) {}
+            } catch (e) { }
             active.state.connection = null;
         }
         active.state.isConnected = false;
