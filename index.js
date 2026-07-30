@@ -209,13 +209,17 @@ async function changeStatus(client, status) {
         return 'invisible';
     }
 
+
     if (!validStatuses.includes(normalized)) {
         throw new Error(`Invalid status value: ${status}`);
     }
 
+
     await client.user.setPresence({ status: normalized });
     return normalized;
 }
+
+
 
 // App Initialization & Express Routes
 loadConfig();
