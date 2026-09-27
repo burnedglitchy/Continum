@@ -8,7 +8,15 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const port = process.env.PORT || 4000;
-const configPath = path.join(__dirname, 'config.json');
+// Set CONFIG_PATH=/var/data/config.json on Render when using a persistent disk.
+// The default keeps local development setup unchanged.
+const configPath = process.env.CONFIG_PATH
+    ? path.resolve(process.env.CONFIG_PATH)
+    : path.join(__dirname, 'config.json');
+
+function ensureConfigDirectory() {
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+}
 
 /**
  * Multi-instance state map:
@@ -65,6 +73,7 @@ function loadConfig() {
             }
         ];
         const newConfig = { instances: configInstances };
+        ensureConfigDirectory();
         fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
     }
 
@@ -88,6 +97,7 @@ function saveConfig() {
             spamEnabled: inst.spamEnabled
         }))
     };
+    ensureConfigDirectory();
     fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
 }
 
@@ -247,6 +257,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.set('view engine', 'ejs');
+
+app.get('/healthz', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
 
 function getInstancesArray() {
     return Array.from(instances.values()).map(inst => {
